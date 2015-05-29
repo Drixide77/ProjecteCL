@@ -1,2 +1,0 @@
-Main-Class: Asl.Asl
-Class-Path: /home/adria/CL/Asl/libs/antlr3.jar /home/adria/CL/Asl/libs/commons-cli.jar
