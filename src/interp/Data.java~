@@ -42,7 +42,7 @@ import java.util.ArrayList;
 
 public class Data {
     /** Types of data */
-    public enum Type {VOID, BOOLEAN, INTEGER, STRING;}
+    public enum Type {VOID, BOOLEAN, INTEGER, STRING, FLOAT;}
 
     /** Type of data*/
     private Type type;
@@ -51,6 +51,8 @@ public class Data {
     private int value;
 
     private String svalue;
+    
+    private float fvalue;
 
     /** Constructor for integers */
     Data(int v) { type = Type.INTEGER; value = v; }
@@ -59,12 +61,14 @@ public class Data {
     Data(boolean b) { type = Type.BOOLEAN; value = b ? 1 : 0; }
 
     Data(String s) { type = Type.STRING; svalue = s; }
+    
+    Data(float f) { type = Type.FLOAT; fvalue = f; }
 
     /** Constructor for void data */
     Data() {type = Type.VOID; }
 
     /** Copy constructor */
-    Data(Data d) { type = d.type; value = d.value; svalue = d.svalue; }
+    Data(Data d) { type = d.type; value = d.value; svalue = d.svalue; fvalue = d.fvalue; }
 
     /** Returns the type of data */
     public Type getType() { return type; }
@@ -76,6 +80,8 @@ public class Data {
     public boolean isInteger() { return type == Type.INTEGER; }
 
     public boolean isString() { return type == Type.STRING; }
+    
+    public boolean isFloat() { return type == Type.FLOAT; }
 
     /** Indicates whether the data is void */
     public boolean isVoid() { return type == Type.VOID; }
@@ -102,6 +108,11 @@ public class Data {
         assert type == Type.STRING;
         return svalue;
     }
+    
+    public float getFloatValue() {
+        assert type == Type.FLOAT;
+        return fvalue;
+    }
 
 
     /** Defines a Boolean value for the data */
@@ -111,14 +122,17 @@ public class Data {
     public void setValue(int v) { type = Type.INTEGER; value = v; }
 
     public void setValue(String s) { type = Type.STRING; svalue = s; }
+    
+    public void setValue(float f) { type = Type.FLOAT; fvalue = f; }
 
     /** Copies the value from another data */
-    public void setData(Data d) { type = d.type; value = d.value; svalue = d.svalue; }
+    public void setData(Data d) { type = d.type; value = d.value; svalue = d.svalue; fvalue = d.fvalue; }
     
     /** Returns a string representing the data in textual form. */
     public String toString() {
         if (type == Type.BOOLEAN) return value == 1 ? "true" : "false";
         else if (type == Type.STRING) return svalue;
+        else if (type == Type.FLOAT) return Float.toString(fvalue);
         return Integer.toString(value);
     }
     
@@ -127,7 +141,11 @@ public class Data {
      * the value is zero.
      */
     private void checkDivZero(Data d) {
-        if (d.value == 0) throw new RuntimeException ("Division by zero");
+        if (d.type == Type.INTEGER) {
+        	if (d.value == 0) throw new RuntimeException ("Division by zero");
+        } else {
+        	if (d.fvalue == 0.0) throw new RuntimeException ("Division by zero");
+        }
     }
 
     /**
@@ -138,15 +156,25 @@ public class Data {
      */
      
     public void evaluateArithmetic (int op, Data d) {
-          assert type == Type.INTEGER && d.type == Type.INTEGER;
-          switch (op) {
-              case AslLexer.PLUS: value += d.value; break;
-              case AslLexer.MINUS: value -= d.value; break;
-              case AslLexer.MUL: value *= d.value; break;
-              case AslLexer.DIV: checkDivZero(d); value /= d.value; break;
-              case AslLexer.MOD: checkDivZero(d); value %= d.value; break;
-              default: assert false;
-          }
+          assert type == d.type;
+          if (type == Type.FLOAT) {
+          	switch (op) {
+          		case AslLexer.PLUS: fvalue += d.fvalue; break;
+		        	case AslLexer.MINUS: fvalue -= d.fvalue; break;
+		        	case AslLexer.MUL: fvalue *= d.fvalue; break;
+		        	case AslLexer.DIV: checkDivZero(d); fvalue /= d.fvalue; break;
+		        	default: assert false;
+		        }
+          } else if (type == Type.INTEGER) {
+		        switch (op) {
+		            case AslLexer.PLUS: value += d.value; break;
+		            case AslLexer.MINUS: value -= d.value; break;
+		            case AslLexer.MUL: value *= d.value; break;
+		            case AslLexer.DIV: checkDivZero(d); value /= d.value; break;
+		            case AslLexer.MOD: checkDivZero(d); value %= d.value; break;
+		            default: assert false;
+		        }
+          } else assert false;
 
     }
 
@@ -157,12 +185,10 @@ public class Data {
      * @return A Boolean data with the value of the expression.
      */
     public Data evaluateRelational (int op, Data d) {
-    		System.out.println("hola");
         assert type != Type.VOID && type == d.type;
-        if (type == Type.STRING && type == d.type) {
-        	System.out.println("hola2");
+        if (type == Type.STRING) {
         	switch (op) {
-		          case AslLexer.EQUAL: System.out.println("hola3:"+svalue+d.svalue); return new Data(svalue.equals(d.svalue));
+		          case AslLexer.EQUAL: return new Data(svalue.equals(d.svalue));
 		          case AslLexer.NOT_EQUAL: return new Data(!svalue.equals(d.svalue));
 		          default: assert false; 
 		      }

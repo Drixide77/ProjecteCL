@@ -128,6 +128,7 @@ public class Interp {
         if (T == null) return;
         switch(T.getType()) {
             case AslLexer.INT: T.setIntValue(); break;
+            case AslLexer.FLOAT: T.setFloatValue(); break;
             case AslLexer.STRING: T.setStringValue(); break;
             case AslLexer.BOOLEAN: T.setBooleanValue(); break;
             default: break;
@@ -276,8 +277,11 @@ public class Interp {
                     token = stdin.next();
                     val.setValue(Integer.parseInt(token)); 
                 } catch (NumberFormatException ex) {
-                		val.setValue(token);
-                    //throw new RuntimeException ("Format error when reading a number: " + token);
+                		try {
+                			val.setValue(Float.parseFloat(token));
+                		} catch (NumberFormatException ex2) {
+                			val.setValue(token);
+                		}
                 }
                 Stack.defineVariable (t.getChild(0).getText(), val);
                 return null;
@@ -340,6 +344,10 @@ public class Interp {
             case AslLexer.STRING:
                 value = new Data(t.getStringValue());
                 break;
+            // A Float literal
+            case AslLexer.FLOAT:
+                value = new Data(t.getFloatValue());
+                break;
             // A function call. Checks that the function returns a result.
             case AslLexer.FUNCALL:
                 value = executeFunction(t.getChild(0).getText(), t.getChild(1));
@@ -362,10 +370,10 @@ public class Interp {
         if (t.getChildCount() == 1) {
             switch (type) {
                 case AslLexer.PLUS:
-                    checkInteger(value);
+                    checkNumeric(value);
                     break;
                 case AslLexer.MINUS:
-                    checkInteger(value);
+                    checkNumeric(value);
                     value.setValue(-value.getIntegerValue());
                     break;
                 case AslLexer.NOT:
@@ -398,12 +406,16 @@ public class Interp {
             // Arithmetic operators
             case AslLexer.PLUS:
                 value2 = evaluateExpression(t.getChild(1));
-                if (value2.isInteger() || value2.isInteger()) { checkInteger(value); checkInteger(value2); }
+                if (value2.isInteger() || value2.isInteger()) { checkNumeric(value); checkNumeric(value2); }
                 value.evaluateArithmetic(type, value2);
                 break;
             case AslLexer.MINUS:
             case AslLexer.MUL:
             case AslLexer.DIV:
+            		value2 = evaluateExpression(t.getChild(1));
+                checkNumeric(value); checkNumeric(value2);
+                value.evaluateArithmetic(type, value2);
+                break;
             case AslLexer.MOD:
                 value2 = evaluateExpression(t.getChild(1));
                 checkInteger(value); checkInteger(value2);
@@ -469,7 +481,15 @@ public class Interp {
     /** Checks that the data is integer and raises an exception if it is not. */
     private void checkInteger (Data b) {
         if (!b.isInteger()) {
-            throw new RuntimeException ("Expecting numerical expression");
+            throw new RuntimeException ("Expecting integer number");
+        }
+    }
+    
+    private void checkNumeric (Data b) {
+        if (!b.isInteger()) {
+        		if (!b.isFloat()) {
+        			throw new RuntimeException ("Expecting numerical expression");
+        		} 
         }
     }
 

@@ -84,10 +84,11 @@ block_instructions
             -> ^(LIST_INSTR instruction+)
         ;
 
+
 // The different types of instructions
 instruction
-        :	assign          // Assignment
-        |	ite_stmt        // if-then-else
+        :	assign // Assignment
+        |	ite_stmt        // if-then-else 
         |	while_stmt      // while statement
         |   funcall         // Call to a procedure (no result produced)
         |	return_stmt     // Return statement
@@ -97,7 +98,7 @@ instruction
         ;
 
 // Assignment
-assign	:	idarray eq=EQUAL expr -> ^(ASSIGN[$eq,":="] ID expr)
+assign	:	ID eq=EQUAL expr -> ^(ASSIGN[$eq,":="] ID expr)
         ;
 
 // if-then-else (else is optional)
@@ -117,7 +118,7 @@ read	:	READ^ ID
         ;
 
 // Write an expression or a string
-write	:   WRITE^ (expr | STRING )
+write	:   WRITE^ expr
         ;
 
 // Grammar for expressions with boolean, relational and aritmetic operators
@@ -136,23 +137,19 @@ num_expr:   term ( (PLUS^ | MINUS^) term)*
 term    :   factor ( (MUL^ | DIV^ | MOD^) factor)*
         ;
 
-factor  :   (NOT^ | PLUS^ | MINUS^)? preatomarray
-        ;
-
-preatomarray :   atom 
-        |        idarray
-        ;
-
-idarray :   ID ('['! INT ']'!)?
+factor  :   (NOT^ | PLUS^ | MINUS^)? atom
         ;
 
 // Atom of the expressions (variables, integer and boolean literals).
 // An atom can also be a function call or another expression
 // in parenthesis
-atom    :   INT
+atom    :   ID 
+        |   INT
         |   (b=TRUE | b=FALSE)  -> ^(BOOLEAN[$b,$b.text])
         |   funcall
         |   '('! expr ')'!
+        |   STRING
+//        |   FLOAT
         ;
 
 // A function call has a lits of arguments in parenthesis (possibly empty)
@@ -164,6 +161,8 @@ expr_list:  expr (','! expr)*
         ;
 
 // Basic tokens
+INTER   : '?' ;
+COLON   : ':' ;
 EQUAL	: '=' ;
 NOT_EQUAL: '!=' ;
 LT	    : '<' ;
@@ -194,7 +193,7 @@ TRUE    : 'true' ;
 FALSE   : 'false';
 ID  	:	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_')* ;
 INT 	:	'0'..'9'+ ;
-
+//FLOAT : ('0'..'9')+ '.' ('0'..'9'+) ;
 
 // C-style comments
 COMMENT	: '//' ~('\n'|'\r')* '\r'? '\n' {$channel=HIDDEN;}

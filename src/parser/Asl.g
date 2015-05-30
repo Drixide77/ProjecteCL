@@ -149,6 +149,7 @@ atom    :   ID
         |   funcall
         |   '('! expr ')'!
         |   STRING
+        |   FLOAT
         ;
 
 // A function call has a lits of arguments in parenthesis (possibly empty)
@@ -192,6 +193,7 @@ TRUE    : 'true' ;
 FALSE   : 'false';
 ID  	:	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_')* ;
 INT 	:	'0'..'9'+ ;
+FLOAT : ('0'..'9')+ '.' ('0'..'9'+) ;
 
 // C-style comments
 COMMENT	: '//' ~('\n'|'\r')* '\r'? '\n' {$channel=HIDDEN;}

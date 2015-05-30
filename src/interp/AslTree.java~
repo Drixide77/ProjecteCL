@@ -42,7 +42,7 @@ public class AslTree extends CommonTree {
     /** Field to store integer literals */
     private int intValue;
     
-    private float floatValue;
+    private int floatValue;
 
     /** Field to store string literals (without the enclosing quotes) */
     private String strValue;
