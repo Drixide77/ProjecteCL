@@ -335,6 +335,10 @@ public class Interp {
             case AslLexer.BOOLEAN:
                 value = new Data(t.getBooleanValue());
                 break;
+            // A String literal
+            case AslLexer.STRING:
+                value = new Data(t.getStringValue());
+                break;
             // A function call. Checks that the function returns a result.
             case AslLexer.FUNCALL:
                 value = executeFunction(t.getChild(0).getText(), t.getChild(1));
@@ -392,6 +396,10 @@ public class Interp {
 
             // Arithmetic operators
             case AslLexer.PLUS:
+                value2 = evaluateExpression(t.getChild(1));
+                if (value2.isInteger() || value2.isInteger()) { checkInteger(value); checkInteger(value2); }
+                value.evaluateArithmetic(type, value2);
+                break;
             case AslLexer.MINUS:
             case AslLexer.MUL:
             case AslLexer.DIV:

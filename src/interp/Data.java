@@ -38,16 +38,19 @@ package interp;
  */
 
 import parser.*;
+import java.util.ArrayList;
 
 public class Data {
     /** Types of data */
-    public enum Type {VOID, BOOLEAN, INTEGER;}
+    public enum Type {VOID, BOOLEAN, INTEGER, STRING;}
 
     /** Type of data*/
     private Type type;
 
     /** Value of the data */
-    private int value; 
+    private int value;
+
+    private String svalue;
 
     /** Constructor for integers */
     Data(int v) { type = Type.INTEGER; value = v; }
@@ -55,11 +58,13 @@ public class Data {
     /** Constructor for Booleans */
     Data(boolean b) { type = Type.BOOLEAN; value = b ? 1 : 0; }
 
+    Data(String s) { type = Type.STRING; svalue = s; }
+
     /** Constructor for void data */
     Data() {type = Type.VOID; }
 
     /** Copy constructor */
-    Data(Data d) { type = d.type; value = d.value; }
+    Data(Data d) { type = d.type; value = d.value; svalue = d.svalue; }
 
     /** Returns the type of data */
     public Type getType() { return type; }
@@ -69,6 +74,8 @@ public class Data {
 
     /** Indicates whether the data is integer */
     public boolean isInteger() { return type == Type.INTEGER; }
+
+    public boolean isString() { return type == Type.STRING; }
 
     /** Indicates whether the data is void */
     public boolean isVoid() { return type == Type.VOID; }
@@ -91,19 +98,28 @@ public class Data {
         return value == 1;
     }
 
+    public String getStringValue() {
+        assert type == Type.STRING;
+        return svalue;
+    }
+
+
     /** Defines a Boolean value for the data */
     public void setValue(boolean b) { type = Type.BOOLEAN; value = b ? 1 : 0; }
 
     /** Defines an integer value for the data */
     public void setValue(int v) { type = Type.INTEGER; value = v; }
 
+    public void setValue(String s) { type = Type.STRING; svalue = s; }
+
     /** Copies the value from another data */
-    public void setData(Data d) { type = d.type; value = d.value; }
+    public void setData(Data d) { type = d.type; value = d.value; svalue = d.svalue; }
     
     /** Returns a string representing the data in textual form. */
     public String toString() {
         if (type == Type.BOOLEAN) return value == 1 ? "true" : "false";
-        return Integer.toString(value);
+        else if (type == Type.BOOLEAN) return Integer.toString(value);
+        else return svalue;
     }
     
     /**
@@ -122,14 +138,19 @@ public class Data {
      */
      
     public void evaluateArithmetic (int op, Data d) {
-        assert type == Type.INTEGER && d.type == Type.INTEGER;
-        switch (op) {
-            case AslLexer.PLUS: value += d.value; break;
-            case AslLexer.MINUS: value -= d.value; break;
-            case AslLexer.MUL: value *= d.value; break;
-            case AslLexer.DIV: checkDivZero(d); value /= d.value; break;
-            case AslLexer.MOD: checkDivZero(d); value %= d.value; break;
-            default: assert false;
+        if (type == Type.STRING && d.type == Type.STRING) {
+            if (op != AslLexer.PLUS) assert false;
+            svalue = svalue + d.svalue;
+        } else {
+            assert type == Type.INTEGER && d.type == Type.INTEGER;
+            switch (op) {
+                case AslLexer.PLUS: value += d.value; break;
+                case AslLexer.MINUS: value -= d.value; break;
+                case AslLexer.MUL: value *= d.value; break;
+                case AslLexer.DIV: checkDivZero(d); value /= d.value; break;
+                case AslLexer.MOD: checkDivZero(d); value %= d.value; break;
+                default: assert false;
+            }
         }
     }
 

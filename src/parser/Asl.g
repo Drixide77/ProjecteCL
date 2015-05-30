@@ -84,10 +84,11 @@ block_instructions
             -> ^(LIST_INSTR instruction+)
         ;
 
+
 // The different types of instructions
 instruction
-        :	assign          // Assignment
-        |	ite_stmt        // if-then-else
+        :	assign // Assignment
+        |	ite_stmt        // if-then-else 
         |	while_stmt      // while statement
         |   funcall         // Call to a procedure (no result produced)
         |	return_stmt     // Return statement
@@ -117,7 +118,7 @@ read	:	READ^ ID
         ;
 
 // Write an expression or a string
-write	:   WRITE^ (expr | STRING )
+write	:   WRITE^ expr
         ;
 
 // Grammar for expressions with boolean, relational and aritmetic operators
@@ -147,6 +148,7 @@ atom    :   ID
         |   (b=TRUE | b=FALSE)  -> ^(BOOLEAN[$b,$b.text])
         |   funcall
         |   '('! expr ')'!
+        |   STRING
         ;
 
 // A function call has a lits of arguments in parenthesis (possibly empty)
@@ -158,6 +160,8 @@ expr_list:  expr (','! expr)*
         ;
 
 // Basic tokens
+INTER   : '?' ;
+COLON   : ':' ;
 EQUAL	: '=' ;
 NOT_EQUAL: '!=' ;
 LT	    : '<' ;
@@ -210,6 +214,5 @@ WS  	: ( ' '
         | '\n'
         ) {$channel=HIDDEN;}
     	;
-
 
 
