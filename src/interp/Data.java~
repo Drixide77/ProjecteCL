@@ -138,20 +138,16 @@ public class Data {
      */
      
     public void evaluateArithmetic (int op, Data d) {
-        if (type == Type.STRING && d.type == Type.STRING) {
-            if (op != AslLexer.PLUS) assert false;
-            svalue = svalue + d.svalue;
-        } else {
-            assert type == Type.INTEGER && d.type == Type.INTEGER;
-            switch (op) {
-                case AslLexer.PLUS: value += d.value; break;
-                case AslLexer.MINUS: value -= d.value; break;
-                case AslLexer.MUL: value *= d.value; break;
-                case AslLexer.DIV: checkDivZero(d); value /= d.value; break;
-                case AslLexer.MOD: checkDivZero(d); value %= d.value; break;
-                default: assert false;
-            }
-        }
+          assert type == Type.INTEGER && d.type == Type.INTEGER;
+          switch (op) {
+              case AslLexer.PLUS: value += d.value; break;
+              case AslLexer.MINUS: value -= d.value; break;
+              case AslLexer.MUL: value *= d.value; break;
+              case AslLexer.DIV: checkDivZero(d); value /= d.value; break;
+              case AslLexer.MOD: checkDivZero(d); value %= d.value; break;
+              default: assert false;
+          }
+
     }
 
     /**
@@ -161,16 +157,26 @@ public class Data {
      * @return A Boolean data with the value of the expression.
      */
     public Data evaluateRelational (int op, Data d) {
+    		System.out.println("hola");
         assert type != Type.VOID && type == d.type;
-        switch (op) {
-            case AslLexer.EQUAL: return new Data(value == d.value);
-            case AslLexer.NOT_EQUAL: return new Data(value != d.value);
-            case AslLexer.LT: return new Data(value < d.value);
-            case AslLexer.LE: return new Data(value <= d.value);
-            case AslLexer.GT: return new Data(value > d.value);
-            case AslLexer.GE: return new Data(value >= d.value);
-            default: assert false; 
-        }
+        if (type == Type.STRING && type == d.type) {
+        	System.out.println("hola2");
+        	switch (op) {
+		          case AslLexer.EQUAL: System.out.println("hola3:"+svalue+d.svalue); return new Data(svalue.equals(d.svalue));
+		          case AslLexer.NOT_EQUAL: return new Data(!svalue.equals(d.svalue));
+		          default: assert false; 
+		      }
+        } else {
+		      switch (op) {
+		          case AslLexer.EQUAL: return new Data(value == d.value);
+		          case AslLexer.NOT_EQUAL: return new Data(value != d.value);
+		          case AslLexer.LT: return new Data(value < d.value);
+		          case AslLexer.LE: return new Data(value <= d.value);
+		          case AslLexer.GT: return new Data(value > d.value);
+		          case AslLexer.GE: return new Data(value >= d.value);
+		          default: assert false; 
+		      }
+		    }
         return null;
     }
 }

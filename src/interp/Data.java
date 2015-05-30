@@ -158,15 +158,23 @@ public class Data {
      */
     public Data evaluateRelational (int op, Data d) {
         assert type != Type.VOID && type == d.type;
-        switch (op) {
-            case AslLexer.EQUAL: return new Data(value == d.value);
-            case AslLexer.NOT_EQUAL: return new Data(value != d.value);
-            case AslLexer.LT: return new Data(value < d.value);
-            case AslLexer.LE: return new Data(value <= d.value);
-            case AslLexer.GT: return new Data(value > d.value);
-            case AslLexer.GE: return new Data(value >= d.value);
-            default: assert false; 
-        }
+        if (type == Type.STRING && type == d.type) {
+        	switch (op) {
+		          case AslLexer.EQUAL: return new Data(svalue.equals(d.svalue));
+		          case AslLexer.NOT_EQUAL: return new Data(!svalue.equals(d.svalue));
+		          default: assert false; 
+		      }
+        } else {
+		      switch (op) {
+		          case AslLexer.EQUAL: return new Data(value == d.value);
+		          case AslLexer.NOT_EQUAL: return new Data(value != d.value);
+		          case AslLexer.LT: return new Data(value < d.value);
+		          case AslLexer.LE: return new Data(value <= d.value);
+		          case AslLexer.GT: return new Data(value > d.value);
+		          case AslLexer.GE: return new Data(value >= d.value);
+		          default: assert false; 
+		      }
+		    }
         return null;
     }
 }

@@ -392,6 +392,10 @@ public class Interp {
                 if (value.getType() != value2.getType()) {
                   throw new RuntimeException ("Incompatible types in relational expression");
                 }
+                System.out.println("value: "+value.getStringValue());
+                System.out.println("type: "+value.getType());
+                System.out.println("value2: "+value2.getStringValue());
+                System.out.println("type2: "+value2.getType());
                 value = value.evaluateRelational(type, value2);
                 break;
 
