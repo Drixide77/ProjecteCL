@@ -1,0 +1,30 @@
+variables:
+
+float rX;
+
+float rY;
+
+<llista on amagatzemar les dades dels obstacles>;
+
+bool rTrail;
+
+functions:
+
+void rSet (float position_x, float position_y, int rotation);
+
+void rMove(float distance);
+
+void rTurn(int grades);
+
+void oSetSquare(float position_x, float position_y, float size_x, float size_y);
+
+oSetCircle(float position_x, float position_y, float radius);
+
+void rTrail (bool activate);
+
+bool rFeel(int sensor);
+
+float rXPosition();
+
+float rYPosition();
+
