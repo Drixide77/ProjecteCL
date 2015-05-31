@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.io.*;
+import java.lang.Math;
 
 /** Class that implements the interpreter of the language. */
 
@@ -62,6 +63,38 @@ public class Interp {
 
     /** Nested levels of function calls. */
     private int function_nesting = -1;
+    
+    
+    //Simulation variables
+    private boolean positioned = false;
+
+    private float rX = -1.0f;
+
+		private float rY = -1.0f;
+		
+		private float rRot = 0.0f;
+
+		private boolean rTrail = false;
+		
+		private class Obstacle {
+			
+			public float X;
+
+		  public float Y;
+		  
+		  public float sizeX;
+		  
+		  public float sizeY;
+		  
+		}
+		
+		private ArrayList<Obstacle> obsList = new ArrayList<Obstacle>();
+		
+		/**
+		for (Obstacle curr : obsList) {
+		
+		}
+		*/
     
     /**
      * Constructor of the interpreter. It prepares the main
@@ -150,6 +183,16 @@ public class Interp {
     /** Defines the current line number with a specific value */
     private void setLineNumber(int l) { linenumber = l;}
     
+    private void checkInteger(AslTree t) {
+    	if (t.getFloatValue() == 0.0 && t.getStringValue() == null);
+    	else throw new RuntimeException("incorrect argument type");;
+    }
+    
+    private void checkFloat(AslTree t) {
+    	if (t.getIntValue() == 0 && t.getStringValue() == null);
+    	else throw new RuntimeException("incorrect argument type");;
+    }
+    
     /**
      * Executes a function.
      * @param funcname The name of the function.
@@ -157,8 +200,59 @@ public class Interp {
      * @return The data returned by the function.
      */
     private Data executeFunction (String funcname, AslTree args) {
+        
+        if (funcname.equals("rSet")) 
+        {
+		      	if (args.getChildCount() != 3) throw new RuntimeException("incorrect number of arguments");
+		      	AslTree n;
+		      	
+		      	n = args.getChild(0);
+		      	checkFloat(n);
+		      	float newX = n.getFloatValue();
+		      	
+		      	n = args.getChild(1);
+		      	checkFloat(n);
+		      	float newY = n.getFloatValue();
+		      	
+		      	n = args.getChild(2);
+		      	checkInteger(n);
+		      	float newRot = n.getFloatValue();
+		      	
+		      	rX = newX; rY = newY; rRot = newRot;
+		      	
+		      	if (!positioned) {
+		      		System.out.println("Robot positioned!");
+		      		positioned = true;
+		      	}
+		      	else System.out.println("Robot repositioned!");
+		      	
+		      	System.out.println("rX: "+rX+", rY: "+rY+", rRot: "+rRot);
+		      	
+		      	Data result = new Data();
+		      	return result;
+        } 
+        else if (funcname.equals("rMove")) 
+        {
+        		if (args.getChildCount() != 1) throw new RuntimeException("incorrect number of arguments");
+		      	AslTree n;
+		      	
+		      	n = args.getChild(0);
+		      	checkFloat(n);
+		      	float dist = n.getFloatValue();
+		      	
+		        rX += dist * Math.cos(Math.toRadians((double)rRot));
+						rY += dist * Math.sin(Math.toRadians((double)rRot));
+		      	
+		      	System.out.println("Robot moved!");
+		      	System.out.println("rX: "+rX+", rY: "+rY);
+		      	
+		      	Data result = new Data();
+		      	return result;
+        }
+        
         // Get the AST of the function
         AslTree f = FuncName2Tree.get(funcname);
+        
         if (f == null) throw new RuntimeException(" function " + funcname + " not declared");
 
         // Gather the list of arguments of the caller. This function
@@ -481,7 +575,7 @@ public class Interp {
     /** Checks that the data is integer and raises an exception if it is not. */
     private void checkInteger (Data b) {
         if (!b.isInteger()) {
-            throw new RuntimeException ("Expecting numerical expression");
+            throw new RuntimeException ("Expecting integer number");
         }
     }
     
