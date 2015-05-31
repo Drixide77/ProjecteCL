@@ -90,11 +90,17 @@ public class Interp {
 		
 		private ArrayList<Obstacle> obsList = new ArrayList<Obstacle>();
 		
-		/**
-		for (Obstacle curr : obsList) {
+		//Constants
+		private static final float ENV_SIZE = 50.0f;
 		
-		}
-		*/
+		private static final float R_SIZE = 0.5f;
+		
+		private static final float C_MARGIN = 0.01f;
+		
+		private static final float SPEED = 0.00001f;
+		
+		private static final float SENSOR_R = 0.51f;
+
     
     /**
      * Constructor of the interpreter. It prepares the main
@@ -183,14 +189,62 @@ public class Interp {
     /** Defines the current line number with a specific value */
     private void setLineNumber(int l) { linenumber = l;}
     
-    private void checkInteger(AslTree t) {
-    	if (t.getFloatValue() == 0.0 && t.getStringValue() == null);
-    	else throw new RuntimeException("incorrect argument type");;
+    //Checks if an AslTree node is of type int
+    private void checkFloat(Data t) {
+    	if (t.isFloat());
+    	else throw new RuntimeException("incorrect argument type");
     }
     
-    private void checkFloat(AslTree t) {
-    	if (t.getIntValue() == 0 && t.getStringValue() == null);
-    	else throw new RuntimeException("incorrect argument type");;
+    //Checks if a position is in the simulation bounds
+    private boolean checkValidPos() {
+    	boolean valid = true;
+    	if ((rX - R_SIZE - C_MARGIN) < 0.0f) valid = false;
+    	if ((rX + R_SIZE + C_MARGIN) > ENV_SIZE) valid = false;
+    	if ((rY - R_SIZE - C_MARGIN) < 0.0f) valid = false;
+    	if ((rY + R_SIZE + C_MARGIN) > ENV_SIZE) valid = false;
+    	return valid;
+    }
+    
+    //Checks for intersection between the robot and the given obstacle
+    private boolean intersects(Obstacle obs)
+		{
+				float cdx = (float)Math.abs((double)rX - (double)obs.X);
+				float cdy = (float)Math.abs((double)rY - (double)obs.Y);
+
+				if (cdx > (obs.sizeX/2.0f + R_SIZE)) { return false; }
+				if (cdy > (obs.sizeY/2.0f + R_SIZE)) { return false; }
+
+				if (cdx <= (obs.sizeX/2.0f)) { return true; } 
+				if (cdy <= (obs.sizeY/2.0f)) { return true; }
+
+				float cdsq = (float)Math.pow((cdx - obs.sizeX/2.0f),2.0) +
+				                     (float)Math.pow((cdy - obs.sizeY/2.0f),2.0);
+
+				return (cdsq <= (float)Math.pow(R_SIZE,2.0));
+		}
+    
+    //Checks for intersection between the robot and all the obstacles
+    private boolean checkColision() {
+    	for (Obstacle curr : obsList) {
+				if (intersects(curr)) return true;
+			}
+			return false;
+    }
+    
+    //Moves the robot for the given distance or until it collides with
+    //an obstacle or the simulation bounds
+    private void moveRobot(float dist) {
+   		float oX, oY;
+   		oX = rX; oY = rY;
+   		while (dist > 0.0f && !checkColision() && checkValidPos()) {
+   			oX = rX;
+   			oY = rY;
+   			rX += SPEED * Math.cos(Math.toRadians((double)rRot));
+				rY += SPEED * Math.sin(Math.toRadians((double)rRot));
+				dist -= SPEED;
+   		}
+   		rX = oX;
+   		rY = oY;
     }
     
     /**
@@ -205,20 +259,26 @@ public class Interp {
         {
 		      	if (args.getChildCount() != 3) throw new RuntimeException("incorrect number of arguments");
 		      	AslTree n;
-		      	
+		      	Data value;
 		      	n = args.getChild(0);
-		      	checkFloat(n);
-		      	float newX = n.getFloatValue();
+		      	value = evaluateExpression(n);
+		      	checkFloat(value);
+		      	float newX = value.getFloatValue();
 		      	
 		      	n = args.getChild(1);
-		      	checkFloat(n);
-		      	float newY = n.getFloatValue();
+		      	value = evaluateExpression(n);
+		      	checkFloat(value);
+		      	float newY = value.getFloatValue();
 		      	
 		      	n = args.getChild(2);
-		      	checkInteger(n);
-		      	float newRot = n.getFloatValue();
+		      	value = evaluateExpression(n);
+		      	checkFloat(value);
+		      	float newRot = value.getFloatValue();
 		      	
 		      	rX = newX; rY = newY; rRot = newRot;
+		      	rRot = rRot % 360.0f;
+		      	
+		      	if (!checkValidPos()) throw new RuntimeException("Position out of bounds");
 		      	
 		      	if (!positioned) {
 		      		System.out.println("Robot positioned!");
@@ -226,7 +286,7 @@ public class Interp {
 		      	}
 		      	else System.out.println("Robot repositioned!");
 		      	
-		      	System.out.println("rX: "+rX+", rY: "+rY+", rRot: "+rRot);
+		      	System.out.println("X: "+rX+", Y: "+rY+", Rotation(Deg): "+rRot);
 		      	
 		      	Data result = new Data();
 		      	return result;
@@ -235,18 +295,164 @@ public class Interp {
         {
         		if (args.getChildCount() != 1) throw new RuntimeException("incorrect number of arguments");
 		      	AslTree n;
+		      	Data value;
 		      	
 		      	n = args.getChild(0);
-		      	checkFloat(n);
-		      	float dist = n.getFloatValue();
-		      	
-		        rX += dist * Math.cos(Math.toRadians((double)rRot));
-						rY += dist * Math.sin(Math.toRadians((double)rRot));
+		      	value = evaluateExpression(n);
+		      	checkFloat(value);
+		      	float dist = value.getFloatValue();
+		      			      	
+		      	moveRobot(dist);
 		      	
 		      	System.out.println("Robot moved!");
-		      	System.out.println("rX: "+rX+", rY: "+rY);
+		      	System.out.println("X: "+rX+", Y: "+rY);
 		      	
 		      	Data result = new Data();
+		      	return result;
+        }
+        else if (funcname.equals("rTurn")) 
+        {
+        		if (args.getChildCount() != 1) throw new RuntimeException("incorrect number of arguments");
+		      	AslTree n;
+		      	Data value;
+		      	
+		      	n = args.getChild(0);
+		      	value = evaluateExpression(n);
+		      	checkFloat(value);
+		      	float rot = value.getFloatValue();
+		      	
+		      	rRot += rot;
+		      	rRot = rRot % 360.0f;
+		      	
+		      	System.out.println("Robot rotated!");
+		      	System.out.println("Rotation(Deg): "+rRot);
+		      	
+		      	Data result = new Data();
+		      	return result;
+        }
+        else if (funcname.equals("oSet")) 
+        {
+        		if (args.getChildCount() != 4) throw new RuntimeException("incorrect number of arguments");
+		      	AslTree n;
+		      	Data value;
+		      	
+		      	n = args.getChild(0);
+		      	value = evaluateExpression(n);
+		      	checkFloat(value);
+		      	float x = value.getFloatValue();
+		      	
+		      	n = args.getChild(1);
+		      	value = evaluateExpression(n);
+		      	checkFloat(value);
+		      	float y = value.getFloatValue();
+		      	
+		      	n = args.getChild(2);
+		      	value = evaluateExpression(n);
+		      	checkFloat(value);
+		      	float sx = value.getFloatValue();
+		      	
+		      	n = args.getChild(3);
+		      	value = evaluateExpression(n);
+		      	checkFloat(value);
+		      	float sy = value.getFloatValue();
+		      	
+		      	Obstacle obs = new Obstacle();
+		      	obs.X = x;
+		      	obs.Y = y;
+		      	obs.sizeX = sx;
+		      	obs.sizeY = sy;
+		      	
+		      	if (intersects(obs)) throw new RuntimeException("obstacle overlaps with robot");
+		      	
+		      	boolean valid = true;
+		      	if ((x - sx/2.0) < 0.0f) valid = false;
+    				if ((x + sx/2.0) > ENV_SIZE) valid = false;
+    				if ((y - sy/2.0) < 0.0f) valid = false;
+    				if ((y + sy/2.0) > ENV_SIZE) valid = false;
+    				if (!valid) throw new RuntimeException("obstacle out of bounds");
+    						      	
+		      	obsList.add(obs);
+		      	
+		      	System.out.println("Obstacle set!");
+		      	System.out.println("X: "+x+", Y: "+y+", H. size: "+sx+", V. size: "+sy);
+		      	
+		      	Data result = new Data();
+		      	return result;
+        }
+        else if (funcname.equals("rTrail")) 
+        {
+        		if (args.getChildCount() != 1) throw new RuntimeException("incorrect number of arguments");
+		      	AslTree n;
+		      	Data value;
+
+		      	n = args.getChild(0);
+		      	value = evaluateExpression(n);
+		      	checkBoolean(value);
+		      	boolean activate = value.getBooleanValue();
+		      	
+		      	rTrail = activate;
+		      	
+		      	if (activate) System.out.println("Trailing enabled!");
+		      	else System.out.println("Trailing disabled!");
+		      	
+		      	Data result = new Data();
+		      	return result;
+        }
+        else if (funcname.equals("rFeel"))
+        {
+        		if (args.getChildCount() != 1) throw new RuntimeException("incorrect number of arguments");
+		      	AslTree n;
+		      	Data value;
+		      	
+		      	n = args.getChild(0);
+		      	value = evaluateExpression(n);
+		      	checkInteger(value);
+		      	int sensor = value.getIntegerValue();
+		      	
+		      	if (sensor < 0 || sensor > 7) throw new RuntimeException("incorrect sensor number");
+		      	
+		      	float orX, orY, orRot;
+		      	orX = rX; orY = rY; orRot = rRot;
+		      	
+		      	switch (sensor) {
+		      		case 0: rRot = rRot; break;
+		      		case 1: rRot = rRot + 45.0f; break;
+		      		case 2: rRot = rRot + 90.0f; break;
+		      		case 3: rRot = rRot + 135.0f; break;
+		      		case 4: rRot = rRot + 180.0f; break;
+		      		case 5: rRot = rRot + 225.0f; break;
+		      		case 6: rRot = rRot + 270.0f; break;
+		      		case 7: rRot = rRot + 315.0f; break;
+		      	}
+		      		
+		      	rX += SENSOR_R * Math.cos(Math.toRadians((double)rRot));
+						rY += SENSOR_R * Math.sin(Math.toRadians((double)rRot));
+		      	
+		      	boolean sense;
+		      	if (!checkColision() && checkValidPos()) sense = false;
+		      	else sense = true;
+		      	
+		      	rX = orX; rY = orY; rRot = orRot;
+		      	
+		      	Data result = new Data(sense);
+		      	return result;
+        }
+        else if (funcname.equals("rXPosition")) {
+        		if (args.getChildCount() != 0) throw new RuntimeException("incorrect number of arguments");
+        		
+        		Data result = new Data(rX);
+		      	return result;
+        }
+        else if (funcname.equals("rYPosition")) {
+        		if (args.getChildCount() != 0) throw new RuntimeException("incorrect number of arguments");
+        		
+        		Data result = new Data(rY);
+		      	return result;
+        }
+        else if (funcname.equals("rRotation")) {
+        		if (args.getChildCount() != 0) throw new RuntimeException("incorrect number of arguments");
+        		
+        		Data result = new Data(rRot);
 		      	return result;
         }
         
@@ -468,7 +674,8 @@ public class Interp {
                     break;
                 case AslLexer.MINUS:
                     checkNumeric(value);
-                    value.setValue(-value.getIntegerValue());
+                    if (value.isFloat) value.setValue(-value.getFloatValue());
+                    else value.setValue(-value.getIntegerValue());
                     break;
                 case AslLexer.NOT:
                     checkBoolean(value);

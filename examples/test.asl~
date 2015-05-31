@@ -3,11 +3,21 @@ func equals(a, b)
 endfunc
 
 func main()
-	write "rSet Test: ";
-	rSet(0,0,0);
-	write "rMove Test:";
-	rMove(1.0);
-  write "Test de Strings: ";
+	write -1.0;
+	write -1;
+	write "Test Robot: ";
+	rSet(1.1,1.1,90.0);
+	rTrail(true);
+	oSet(1.1,30.0,2.0,2.0);
+	rMove(70.0);
+	rTurn(-90.0-360.0);
+	rMove(20.0);
+	rTrail(rFeel(1));
+	rTurn(360.0);
+	write rXPosition();
+	write rYPosition();
+	write rRotation();
+  write "Test de Strings i Float: ";
   s = "potato";
   f = 1.0;
   f2 = 2.9;
