@@ -1,0 +1,435 @@
+diff --git a/Instruccions_a_implementar.txt b/Instruccions_a_implementar.txt
+index 0203d81..a38f350 100644
+--- a/Instruccions_a_implementar.txt
++++ b/Instruccions_a_implementar.txt
+@@ -1,24 +1,24 @@
+ variables:
+ 
+-float rX;
++--float rX;
+ 
+-float rY;
++--float rY;
+ 
+-<llista on amagatzemar les dades dels obstacles>;
++--int rRot;
+ 
+-bool rTrail;
++--<llista on amagatzemar les dades dels obstacles>;
++
++--bool rTrail;
+ 
+ functions:
+ 
+-void rSet (float position_x, float position_y, int rotation);
++--void rSet (float position_x, float position_y, int rotation);
+ 
+-void rMove(float distance);
++--void rMove(float distance);
+ 
+ void rTurn(int grades);
+ 
+-void oSetSquare(float position_x, float position_y, float size_x, float size_y);
+-
+-oSetCircle(float position_x, float position_y, float radius);
++void oSet(float position_x, float position_y, float size_x, float size_y);
+ 
+ void rTrail (bool activate);
+ 
+@@ -28,3 +28,5 @@ float rXPosition();
+ 
+ float rYPosition();
+ 
++float rRotPosition();
++
+diff --git a/Instruccions_a_implementar.txt~ b/Instruccions_a_implementar.txt~
+index 0203d81..cf26e97 100644
+--- a/Instruccions_a_implementar.txt~
++++ b/Instruccions_a_implementar.txt~
+@@ -1,24 +1,24 @@
+ variables:
+ 
+-float rX;
++--float rX;
+ 
+-float rY;
++--float rY;
+ 
+-<llista on amagatzemar les dades dels obstacles>;
++--int rRot;
+ 
+-bool rTrail;
++--<llista on amagatzemar les dades dels obstacles>;
++
++--bool rTrail;
+ 
+ functions:
+ 
+-void rSet (float position_x, float position_y, int rotation);
++--void rSet (float position_x, float position_y, int rotation);
+ 
+ void rMove(float distance);
+ 
+ void rTurn(int grades);
+ 
+-void oSetSquare(float position_x, float position_y, float size_x, float size_y);
+-
+-oSetCircle(float position_x, float position_y, float radius);
++void oSet(float position_x, float position_y, float size_x, float size_y);
+ 
+ void rTrail (bool activate);
+ 
+@@ -28,3 +28,5 @@ float rXPosition();
+ 
+ float rYPosition();
+ 
++float rRotPosition();
++
+diff --git a/examples/test.asl b/examples/test.asl
+index bb5db27..016aa7d 100644
+--- a/examples/test.asl
++++ b/examples/test.asl
+@@ -3,11 +3,15 @@ func equals(a, b)
+ endfunc
+ 
+ func main()
++	write "rSet Test: ";
++	rSet(0,0,90);
++	write "rMove Test:";
++	rMove(1.0);
+   write "Test de Strings: ";
+-  read s;
++  s = "potato";
+   f = 1.0;
+   f2 = 2.9;
+-  read f3;
++  f3 = 2.0;
+   f4 = f * f2 / f3;
+   write f4;
+   write 12 % 7;
+diff --git a/examples/test.asl~ b/examples/test.asl~
+index bb5db27..2e83b34 100644
+--- a/examples/test.asl~
++++ b/examples/test.asl~
+@@ -3,11 +3,15 @@ func equals(a, b)
+ endfunc
+ 
+ func main()
++	write "rSet Test: ";
++	rSet(0,0,0);
++	write "rMove Test:";
++	rMove(1.0);
+   write "Test de Strings: ";
+-  read s;
++  s = "potato";
+   f = 1.0;
+   f2 = 2.9;
+-  read f3;
++  f3 = 2.0;
+   f4 = f * f2 / f3;
+   write f4;
+   write 12 % 7;
+diff --git a/src/interp/Interp.java b/src/interp/Interp.java
+index f658bc3..974ddd8 100644
+--- a/src/interp/Interp.java
++++ b/src/interp/Interp.java
+@@ -33,6 +33,7 @@ import java.util.ArrayList;
+ import java.util.HashMap;
+ import java.util.Scanner;
+ import java.io.*;
++import java.lang.Math;
+ 
+ /** Class that implements the interpreter of the language. */
+ 
+@@ -63,6 +64,38 @@ public class Interp {
+     /** Nested levels of function calls. */
+     private int function_nesting = -1;
+     
++    
++    //Simulation variables
++    private boolean positioned = false;
++
++    private float rX = -1.0f;
++
++		private float rY = -1.0f;
++		
++		private float rRot = 0.0f;
++
++		private boolean rTrail = false;
++		
++		private class Obstacle {
++			
++			public float X;
++
++		  public float Y;
++		  
++		  public float sizeX;
++		  
++		  public float sizeY;
++		  
++		}
++		
++		private ArrayList<Obstacle> obsList = new ArrayList<Obstacle>();
++		
++		/**
++		for (Obstacle curr : obsList) {
++		
++		}
++		*/
++    
+     /**
+      * Constructor of the interpreter. It prepares the main
+      * data structures for the execution of the main program.
+@@ -150,6 +183,16 @@ public class Interp {
+     /** Defines the current line number with a specific value */
+     private void setLineNumber(int l) { linenumber = l;}
+     
++    private void checkInteger(AslTree t) {
++    	if (t.getFloatValue() == 0.0f && t.getStringValue() == null);
++    	else throw new RuntimeException("incorrect argument type");;
++    }
++    
++    private void checkFloat(AslTree t) {
++    	if (t.getIntValue() == 0 && t.getStringValue() == null);
++    	else throw new RuntimeException("incorrect argument type");;
++    }
++    
+     /**
+      * Executes a function.
+      * @param funcname The name of the function.
+@@ -157,8 +200,59 @@ public class Interp {
+      * @return The data returned by the function.
+      */
+     private Data executeFunction (String funcname, AslTree args) {
++        
++        if (funcname.equals("rSet")) 
++        {
++		      	if (args.getChildCount() != 3) throw new RuntimeException("incorrect number of arguments");
++		      	AslTree n;
++		      	
++		      	n = args.getChild(0);
++		      	checkFloat(n);
++		      	float newX = n.getFloatValue();
++		      	
++		      	n = args.getChild(1);
++		      	checkFloat(n);
++		      	float newY = n.getFloatValue();
++		      	
++		      	n = args.getChild(2);
++		      	checkInteger(n);
++		      	float newRot = n.getFloatValue();
++		      	
++		      	rX = newX; rY = newY; rRot = newRot;
++		      	
++		      	if (!positioned) {
++		      		System.out.println("Robot positioned!");
++		      		positioned = true;
++		      	}
++		      	else System.out.println("Robot repositioned!");
++		      	
++		      	System.out.println("rX: "+rX+", rY: "+rY+", rRot: "+rRot);
++		      	
++		      	Data result = new Data();
++		      	return result;
++        } 
++        else if (funcname.equals("rMove")) 
++        {
++        		if (args.getChildCount() != 1) throw new RuntimeException("incorrect number of arguments");
++		      	AslTree n;
++		      	
++		      	n = args.getChild(0);
++		      	checkFloat(n);
++		      	float dist = n.getFloatValue();
++		      	
++		        rX += dist * Math.cos(Math.toRadians((double)rRot));
++						rY += dist * Math.sin(Math.toRadians((double)rRot));
++		      	
++		      	System.out.println("Robot moved!");
++		      	System.out.println("rX: "+rX+", rY: "+rY);
++		      	
++		      	Data result = new Data();
++		      	return result;
++        }
++        
+         // Get the AST of the function
+         AslTree f = FuncName2Tree.get(funcname);
++        
+         if (f == null) throw new RuntimeException(" function " + funcname + " not declared");
+ 
+         // Gather the list of arguments of the caller. This function
+diff --git a/src/interp/Interp.java~ b/src/interp/Interp.java~
+index adaa0aa..f5848d9 100644
+--- a/src/interp/Interp.java~
++++ b/src/interp/Interp.java~
+@@ -33,6 +33,7 @@ import java.util.ArrayList;
+ import java.util.HashMap;
+ import java.util.Scanner;
+ import java.io.*;
++import java.lang.Math;
+ 
+ /** Class that implements the interpreter of the language. */
+ 
+@@ -63,6 +64,38 @@ public class Interp {
+     /** Nested levels of function calls. */
+     private int function_nesting = -1;
+     
++    
++    //Simulation variables
++    private boolean positioned = false;
++
++    private float rX = -1.0f;
++
++		private float rY = -1.0f;
++		
++		private float rRot = 0.0f;
++
++		private boolean rTrail = false;
++		
++		private class Obstacle {
++			
++			public float X;
++
++		  public float Y;
++		  
++		  public float sizeX;
++		  
++		  public float sizeY;
++		  
++		}
++		
++		private ArrayList<Obstacle> obsList = new ArrayList<Obstacle>();
++		
++		/**
++		for (Obstacle curr : obsList) {
++		
++		}
++		*/
++    
+     /**
+      * Constructor of the interpreter. It prepares the main
+      * data structures for the execution of the main program.
+@@ -150,6 +183,16 @@ public class Interp {
+     /** Defines the current line number with a specific value */
+     private void setLineNumber(int l) { linenumber = l;}
+     
++    private void checkInteger(AslTree t) {
++    	if (t.getFloatValue() == 0.0 && t.getStringValue() == null);
++    	else throw new RuntimeException("incorrect argument type");;
++    }
++    
++    private void checkFloat(AslTree t) {
++    	if (t.getIntValue() == 0 && t.getStringValue() == null);
++    	else throw new RuntimeException("incorrect argument type");;
++    }
++    
+     /**
+      * Executes a function.
+      * @param funcname The name of the function.
+@@ -157,8 +200,59 @@ public class Interp {
+      * @return The data returned by the function.
+      */
+     private Data executeFunction (String funcname, AslTree args) {
++        
++        if (funcname.equals("rSet")) 
++        {
++		      	if (args.getChildCount() != 3) throw new RuntimeException("incorrect number of arguments");
++		      	AslTree n;
++		      	
++		      	n = args.getChild(0);
++		      	checkFloat(n);
++		      	float newX = n.getFloatValue();
++		      	
++		      	n = args.getChild(1);
++		      	checkFloat(n);
++		      	float newY = n.getFloatValue();
++		      	
++		      	n = args.getChild(2);
++		      	checkInteger(n);
++		      	float newRot = n.getFloatValue();
++		      	
++		      	rX = newX; rY = newY; rRot = newRot;
++		      	
++		      	if (!positioned) {
++		      		System.out.println("Robot positioned!");
++		      		positioned = true;
++		      	}
++		      	else System.out.println("Robot repositioned!");
++		      	
++		      	System.out.println("rX: "+rX+", rY: "+rY+", rRot: "+rRot);
++		      	
++		      	Data result = new Data();
++		      	return result;
++        } 
++        else if (funcname.equals("rMove")) 
++        {
++        		if (args.getChildCount() != 1) throw new RuntimeException("incorrect number of arguments");
++		      	AslTree n;
++		      	
++		      	n = args.getChild(0);
++		      	checkFloat(n);
++		      	float dist = n.getFloatValue();
++		      	
++		        rX += dist * Math.cos(Math.toRadians((double)rRot));
++						rY += dist * Math.sin(Math.toRadians((double)rRot));
++		      	
++		      	System.out.println("Robot moved!");
++		      	System.out.println("rX: "+rX+", rY: "+rY);
++		      	
++		      	Data result = new Data();
++		      	return result;
++        }
++        
+         // Get the AST of the function
+         AslTree f = FuncName2Tree.get(funcname);
++        
+         if (f == null) throw new RuntimeException(" function " + funcname + " not declared");
+ 
+         // Gather the list of arguments of the caller. This function
+@@ -481,7 +575,7 @@ public class Interp {
+     /** Checks that the data is integer and raises an exception if it is not. */
+     private void checkInteger (Data b) {
+         if (!b.isInteger()) {
+-            throw new RuntimeException ("Expecting numerical expression");
++            throw new RuntimeException ("Expecting integer number");
+         }
+     }
+     
+diff --git a/src/parser/Asl.g~ b/src/parser/Asl.g~
+index 87a037a..ffaa7c1 100644
+--- a/src/parser/Asl.g~
++++ b/src/parser/Asl.g~
+@@ -96,7 +96,7 @@ instruction
+         | 	write           // Write a string or an expression
+         |                   // Nothing
+         ;
+-
++#Soy un comentario en assembler.
+ // Assignment
+ assign	:	ID eq=EQUAL expr -> ^(ASSIGN[$eq,":="] ID expr)
+         ;
+@@ -149,7 +149,7 @@ atom    :   ID
+         |   funcall
+         |   '('! expr ')'!
+         |   STRING
+-//        |   FLOAT
++        |   FLOAT
+         ;
+ 
+ // A function call has a lits of arguments in parenthesis (possibly empty)
+@@ -193,7 +193,7 @@ TRUE    : 'true' ;
+ FALSE   : 'false';
+ ID  	:	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_')* ;
+ INT 	:	'0'..'9'+ ;
+-//FLOAT : ('0'..'9')+ '.' ('0'..'9'+) ;
++FLOAT : ('0'..'9')+ '.' ('0'..'9'+) ;
+ 
+ // C-style comments
+ COMMENT	: '//' ~('\n'|'\r')* '\r'? '\n' {$channel=HIDDEN;}
+diff --git a/test.ast b/test.ast
+new file mode 100644
+index 0000000..ea60bdc
+--- /dev/null
++++ b/test.ast
+@@ -0,0 +1 @@
++(LIST_FUNCTIONS (func equals (PARAMS a b) (LIST_INSTR (return (= a b)))) (func main PARAMS (LIST_INSTR (write "rSet Test: ") (FUNCALL rSet (ARGLIST 1 2 3)) (write "Test de Strings: ") (read s) (:= f 1.0) (:= f2 2.9) (read f3) (:= f4 (/ (* f f2) f3)) (write f4) (write (% 12 7)) (:= n "potato") (:= m n) (write m) (if (FUNCALL equals (ARGLIST s m)) (LIST_INSTR (write "GLaDoS"))) (write "Solucio: ") (write s))))
+\ No newline at end of file
