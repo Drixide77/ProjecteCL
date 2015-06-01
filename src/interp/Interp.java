@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.Scanner;
 import java.io.*;
 import java.lang.Math;
+import java.lang.InterruptedException;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
@@ -67,6 +68,11 @@ public class Interp {
     private int function_nesting = -1;
     
     
+    //Execution variables
+    private boolean nodisplay = false;
+    
+    private boolean txttrace = false;
+    
     //Simulation variables
     private boolean positioned = false;
 
@@ -78,31 +84,18 @@ public class Interp {
 
 		private boolean rTrail = false;
 		
-		private class Obstacle {
-			
-			public float X;
-
-		  public float Y;
-		  
-		  public float sizeX;
-		  
-		  public float sizeY;
-		  
-		}
-		
-		
 		private ArrayList<Obstacle> obsList = new ArrayList<Obstacle>();
 		
 		//Constants
 		private static final float ENV_SIZE = 50.0f;
 		
-		private static final float R_SIZE = 0.5f;
+		private static final float R_SIZE = 1.0f;
 		
 		private static final float C_MARGIN = 0.01f;
 		
 		private static final float SPEED = 0.00001f;
 		
-		private static final float SENSOR_R = 0.51f;
+		private static final float SENSOR_R = 1.1f;
 		
 		//Graphic Display
 		private JFrame frame;
@@ -134,12 +127,18 @@ public class Interp {
 
     /** Runs the program by calling the main function without parameters. */
     public void Run() {
-    		frame = new JFrame("Simulation");
-				display = new Display();
-				frame.add(display);
-				frame.setSize(300, 400);
-				frame.setVisible(true);
-				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    		nodisplay = false;
+    		txttrace = false;
+    		
+    		if (!nodisplay) {
+    			frame = new JFrame("Simulation");
+					display = new Display();
+					frame.add(display);
+					frame.setSize(520, 550);
+					frame.setVisible(true);
+					frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    		}
+
         executeFunction ("main", null); 
     }
 
@@ -268,7 +267,7 @@ public class Interp {
      * @return The data returned by the function.
      */
     private Data executeFunction (String funcname, AslTree args) {
-        
+        //----------------------------------------------------------
         if (funcname.equals("rSet")) 
         {
 		      	if (args.getChildCount() != 3) throw new RuntimeException("incorrect number of arguments");
@@ -294,17 +293,27 @@ public class Interp {
 		      	
 		      	if (!checkValidPos()) throw new RuntimeException("Position out of bounds");
 		      	
-		      	if (!positioned) {
-		      		System.out.println("Robot positioned!");
-		      		positioned = true;
-		      	}
-		      	else System.out.println("Robot repositioned!");
+		      	positioned = true;
 		      	
-		      	System.out.println("X: "+rX+", Y: "+rY+", Rotation(Deg): "+rRot);
+		      	if (txttrace) {
+		      	
+    					if (!positioned) {
+				    		System.out.println("Robot positioned!");
+				    		
+				    	}
+				    	else System.out.println("Robot repositioned!");
+				    	System.out.println("X: "+rX+", Y: "+rY+", Rotation(Deg): "+rRot);
+				    	
+    				}
+    				if(!nodisplay) {
+    					display.setPositioned(true);
+    					display.updatePos(rX,rY,rRot);
+    				}
 		      	
 		      	Data result = new Data();
 		      	return result;
-        } 
+        }
+        //----------------------------------------------------------
         else if (funcname.equals("rMove")) 
         {
         		if (!positioned) throw new RuntimeException("robot is not positioned yet");
@@ -319,12 +328,18 @@ public class Interp {
 		      			      	
 		      	moveRobot(dist);
 		      	
-		      	System.out.println("Robot moved!");
-		      	System.out.println("X: "+rX+", Y: "+rY);
+		      	if (txttrace) {
+				    	System.out.println("Robot moved!");
+				    	System.out.println("X: "+rX+", Y: "+rY);
+				    }
+				    if (!nodisplay) {
+				    	display.updatePos(rX,rY,rRot);
+				    }
 		      	
 		      	Data result = new Data();
 		      	return result;
         }
+        //----------------------------------------------------------
         else if (funcname.equals("rTurn")) 
         {
         		if (!positioned) throw new RuntimeException("robot is not positioned yet");
@@ -340,12 +355,18 @@ public class Interp {
 		      	rRot += rot;
 		      	rRot = rRot % 360.0f;
 		      	
+		      	if (txttrace) {
 		      	System.out.println("Robot rotated!");
 		      	System.out.println("Rotation(Deg): "+rRot);
+		      	}
+		      	if(!nodisplay) {
+    					display.updatePos(rX,rY,rRot);
+    				}
 		      	
 		      	Data result = new Data();
 		      	return result;
         }
+        //----------------------------------------------------------
         else if (funcname.equals("oSet")) 
         {
         		if (args.getChildCount() != 4) throw new RuntimeException("incorrect number of arguments");
@@ -389,12 +410,17 @@ public class Interp {
     						      	
 		      	obsList.add(obs);
 		      	
-		      	System.out.println("Obstacle set!");
-		      	System.out.println("X: "+x+", Y: "+y+", H. size: "+sx+", V. size: "+sy);
-		      	
+		      	if (txttrace) {
+		      		System.out.println("Obstacle set!");
+		      		System.out.println("X: "+x+", Y: "+y+", H. size: "+sx+", V. size: "+sy);
+		      	}
+		      	if (!nodisplay) {
+		      		display.addObs(obs);
+		      	}
 		      	Data result = new Data();
 		      	return result;
         }
+        //----------------------------------------------------------
         else if (funcname.equals("rTrail")) 
         {
         		if (args.getChildCount() != 1) throw new RuntimeException("incorrect number of arguments");
@@ -408,12 +434,18 @@ public class Interp {
 		      	
 		      	rTrail = activate;
 		      	
-		      	if (activate) System.out.println("Trailing enabled!");
-		      	else System.out.println("Trailing disabled!");
+		      	if (txttrace) {
+		      		if (activate) System.out.println("Trailing enabled!");
+		      		else System.out.println("Trailing disabled!");
+		      	}
+		      	if (!nodisplay) {
+		      		display.setTrail(activate);
+		      	}
 		      	
 		      	Data result = new Data();
 		      	return result;
         }
+        //----------------------------------------------------------
         else if (funcname.equals("rFeel"))
         {
         		if (!positioned) throw new RuntimeException("robot is not positioned yet");
@@ -454,6 +486,7 @@ public class Interp {
 		      	Data result = new Data(sense);
 		      	return result;
         }
+        //----------------------------------------------------------
         else if (funcname.equals("rXPosition")) {
         		if (!positioned) throw new RuntimeException("robot is not positioned yet");
         		if (args.getChildCount() != 0) throw new RuntimeException("incorrect number of arguments");
@@ -461,6 +494,7 @@ public class Interp {
         		Data result = new Data(rX);
 		      	return result;
         }
+        //----------------------------------------------------------
         else if (funcname.equals("rYPosition")) {
         		if (!positioned) throw new RuntimeException("robot is not positioned yet");
         		if (args.getChildCount() != 0) throw new RuntimeException("incorrect number of arguments");
@@ -468,6 +502,7 @@ public class Interp {
         		Data result = new Data(rY);
 		      	return result;
         }
+        //----------------------------------------------------------
         else if (funcname.equals("rRotation")) {
         		if (!positioned) throw new RuntimeException("robot is not positioned yet");
         		if (args.getChildCount() != 0) throw new RuntimeException("incorrect number of arguments");
@@ -475,6 +510,8 @@ public class Interp {
         		Data result = new Data(rRot);
 		      	return result;
         }
+        //----------------------------------------------------------
+        
         
         // Get the AST of the function
         AslTree f = FuncName2Tree.get(funcname);

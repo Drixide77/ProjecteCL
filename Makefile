@@ -46,6 +46,7 @@ INTERP_SRC =	$(INTERP)/Interp.java \
 				$(INTERP)/Stack.java \
 				$(INTERP)/Data.java \
 				$(INTERP)/Display.java \
+				$(INTERP)/Obstacle.java \
 				$(INTERP)/$(TARGET)Tree.java \
 				$(INTERP)/AslTreeAdaptor.java
 
