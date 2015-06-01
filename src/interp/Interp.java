@@ -249,13 +249,24 @@ public class Interp {
     private void moveRobot(float dist) {
    		float oX, oY;
    		oX = rX; oY = rY;
-   		while (dist > 0.0f && !checkColision() && checkValidPos()) {
-   			oX = rX;
-   			oY = rY;
-   			rX += SPEED * Math.cos(Math.toRadians((double)rRot));
-				rY += SPEED * Math.sin(Math.toRadians((double)rRot));
-				dist -= SPEED;
+   		if (dist < 0.0f) {
+   			while (dist < 0.0f && !checkColision() && checkValidPos()) {
+   				oX = rX;
+		 			oY = rY;
+	 				rX -= SPEED * Math.cos(Math.toRadians((double)rRot));
+					rY -= SPEED * Math.sin(Math.toRadians((double)rRot));
+					dist += SPEED;
+	 			}
+   		} else {
+   			while (dist > 0.0f && !checkColision() && checkValidPos()) {
+   				oX = rX;
+		 			oY = rY;
+	 				rX += SPEED * Math.cos(Math.toRadians((double)rRot));
+					rY += SPEED * Math.sin(Math.toRadians((double)rRot));
+					dist -= SPEED;
+	 			}
    		}
+   		
    		rX = oX;
    		rY = oY;
     }
@@ -298,16 +309,16 @@ public class Interp {
 		      	if (txttrace) {
 		      	
     					if (!positioned) {
-				    		System.out.println("Robot positioned!");
+				    		System.out.println("Robot positioned:");
 				    		
 				    	}
-				    	else System.out.println("Robot repositioned!");
+				    	else System.out.println("Robot repositioned:");
 				    	System.out.println("X: "+rX+", Y: "+rY+", Rotation(Deg): "+rRot);
 				    	
     				}
     				if(!nodisplay) {
-    					display.setPositioned(true);
     					display.updatePos(rX,rY,rRot);
+    					display.setPositioned(true);
     				}
 		      	
 		      	Data result = new Data();
@@ -329,7 +340,7 @@ public class Interp {
 		      	moveRobot(dist);
 		      	
 		      	if (txttrace) {
-				    	System.out.println("Robot moved!");
+				    	System.out.println("Robot moved:");
 				    	System.out.println("X: "+rX+", Y: "+rY);
 				    }
 				    if (!nodisplay) {
@@ -356,7 +367,7 @@ public class Interp {
 		      	rRot = rRot % 360.0f;
 		      	
 		      	if (txttrace) {
-		      	System.out.println("Robot rotated!");
+		      	System.out.println("Robot rotated:");
 		      	System.out.println("Rotation(Deg): "+rRot);
 		      	}
 		      	if(!nodisplay) {
@@ -411,7 +422,7 @@ public class Interp {
 		      	obsList.add(obs);
 		      	
 		      	if (txttrace) {
-		      		System.out.println("Obstacle set!");
+		      		System.out.println("Obstacle set:");
 		      		System.out.println("X: "+x+", Y: "+y+", H. size: "+sx+", V. size: "+sy);
 		      	}
 		      	if (!nodisplay) {
@@ -435,8 +446,8 @@ public class Interp {
 		      	rTrail = activate;
 		      	
 		      	if (txttrace) {
-		      		if (activate) System.out.println("Trailing enabled!");
-		      		else System.out.println("Trailing disabled!");
+		      		if (activate) System.out.println("Trailing enabled.");
+		      		else System.out.println("Trailing disabled.");
 		      	}
 		      	if (!nodisplay) {
 		      		display.setTrail(activate);

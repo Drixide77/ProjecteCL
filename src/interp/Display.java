@@ -44,12 +44,11 @@ public class Display extends JPanel {
 
 
 	public void updatePos(float X, float Y, float Rot) {
-  	if (Math.sqrt(Math.pow(X-rX,2)+Math.pow(Y-rY,2)) > D_SPEED) ;//renderMovement();
-  	rX = X; rY = Y; rRot = Rot;
-  	Position pos = new Position();
-  	pos.x = X; pos.y = Y;
-  	positions.add(pos);
-  	repaint();
+		rX = X; rY = Y; rRot = Rot;
+		Position pos = new Position();
+		pos.x = X; pos.y = Y;
+		positions.add(pos);
+		repaint();
   }
   
   public void addObs(Obstacle obs) {
