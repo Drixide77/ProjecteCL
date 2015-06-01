@@ -1,4 +1,4 @@
-TARGET =	Asl
+TARGET =	Robot
 
 # Directories
 ROOT =		$(PWD)
@@ -47,7 +47,7 @@ INTERP_SRC =	$(INTERP)/Interp.java \
 				$(INTERP)/Data.java \
 				$(INTERP)/Display.java \
 				$(INTERP)/Obstacle.java \
-				$(INTERP)/$(TARGET)Tree.java \
+				$(INTERP)/AslTree.java \
 				$(INTERP)/AslTreeAdaptor.java
 
 ALL_SRC =		$(MAIN_SRC) $(PARSER_SRC) $(INTERP_SRC)
@@ -68,7 +68,7 @@ exec:
 	if [ ! -e $(BIN) ]; then\
 	  mkdir $(BIN);\
 	fi
-	echo "Main-Class: Asl.Asl" > $(MANIFEST)
+	echo "Main-Class: Robot.Robot" > $(MANIFEST)
 	echo "Class-Path: $(JARPATH)" >> $(MANIFEST)
 	cd $(CLASSDIR); jar -cmf $(MANIFEST) $(JARFILE) *
 	printf "#!/bin/sh\n\n" > $(EXEC)

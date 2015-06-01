@@ -126,9 +126,9 @@ public class Interp {
     }
 
     /** Runs the program by calling the main function without parameters. */
-    public void Run() {
-    		nodisplay = false;
-    		txttrace = false;
+    public void Run(boolean nd, boolean tt) {
+    		nodisplay = nd;
+    		txttrace = tt;
     		
     		if (!nodisplay) {
     			frame = new JFrame("Simulation");
@@ -157,12 +157,12 @@ public class Interp {
      * function names to the corresponding AST nodes.
      */
     private void MapFunctions(AslTree T) {
-        assert T != null && T.getType() == AslLexer.LIST_FUNCTIONS;
+        assert T != null && T.getType() == RobotLexer.LIST_FUNCTIONS;
         FuncName2Tree = new HashMap<String,AslTree> ();
         int n = T.getChildCount();
         for (int i = 0; i < n; ++i) {
             AslTree f = T.getChild(i);
-            assert f.getType() == AslLexer.FUNC;
+            assert f.getType() == RobotLexer.FUNC;
             String fname = f.getChild(0).getText();
             if (FuncName2Tree.containsKey(fname)) {
                 throw new RuntimeException("Multiple definitions of function " + fname);
@@ -179,10 +179,10 @@ public class Interp {
     private void PreProcessAST(AslTree T) {
         if (T == null) return;
         switch(T.getType()) {
-            case AslLexer.INT: T.setIntValue(); break;
-            case AslLexer.FLOAT: T.setFloatValue(); break;
-            case AslLexer.STRING: T.setStringValue(); break;
-            case AslLexer.BOOLEAN: T.setBooleanValue(); break;
+            case RobotLexer.INT: T.setIntValue(); break;
+            case RobotLexer.FLOAT: T.setFloatValue(); break;
+            case RobotLexer.STRING: T.setStringValue(); break;
+            case RobotLexer.BOOLEAN: T.setBooleanValue(); break;
             default: break;
         }
         int n = T.getChildCount();
@@ -594,13 +594,13 @@ public class Interp {
         switch (t.getType()) {
 
             // Assignment
-            case AslLexer.ASSIGN:
+            case RobotLexer.ASSIGN:
                 value = evaluateExpression(t.getChild(1));
                 Stack.defineVariable (t.getChild(0).getText(), value);
                 return null;
 
             // If-then-else
-            case AslLexer.IF:
+            case RobotLexer.IF:
                 value = evaluateExpression(t.getChild(0));
                 checkBoolean(value);
                 if (value.getBooleanValue()) return executeListInstructions(t.getChild(1));
@@ -609,7 +609,7 @@ public class Interp {
                 return null;
 
             // While
-            case AslLexer.WHILE:
+            case RobotLexer.WHILE:
                 while (true) {
                     value = evaluateExpression(t.getChild(0));
                     checkBoolean(value);
@@ -619,7 +619,7 @@ public class Interp {
                 }
 
             // Return
-            case AslLexer.RETURN:
+            case RobotLexer.RETURN:
                 if (t.getChildCount() != 0) {
                     return evaluateExpression(t.getChild(0));
                 }
@@ -627,7 +627,7 @@ public class Interp {
 
             // Read statement: reads a variable and raises an exception
             // in case of a format error.
-            case AslLexer.READ:
+            case RobotLexer.READ:
                 String token = null;
                 Data val = new Data(0);
                 try {
@@ -644,10 +644,10 @@ public class Interp {
                 return null;
 
             // Write statement: it can write an expression or a string.
-            case AslLexer.WRITE:
+            case RobotLexer.WRITE:
                 AslTree v = t.getChild(0);
                 // Special case for strings
-                if (v.getType() == AslLexer.STRING) {
+                if (v.getType() == RobotLexer.STRING) {
                     System.out.format(v.getStringValue());
                     return null;
                 }
@@ -657,7 +657,7 @@ public class Interp {
                 return null;
 
             // Function call
-            case AslLexer.FUNCALL:
+            case RobotLexer.FUNCALL:
                 executeFunction(t.getChild(0).getText(), t.getChild(1));
                 return null;
 
@@ -686,27 +686,27 @@ public class Interp {
         // Atoms
         switch (type) {
             // A variable
-            case AslLexer.ID:
+            case RobotLexer.ID:
                 value = new Data(Stack.getVariable(t.getText()));
                 break;
             // An integer literal
-            case AslLexer.INT:
+            case RobotLexer.INT:
                 value = new Data(t.getIntValue());
                 break;
             // A Boolean literal
-            case AslLexer.BOOLEAN:
+            case RobotLexer.BOOLEAN:
                 value = new Data(t.getBooleanValue());
                 break;
             // A String literal
-            case AslLexer.STRING:
+            case RobotLexer.STRING:
                 value = new Data(t.getStringValue());
                 break;
             // A Float literal
-            case AslLexer.FLOAT:
+            case RobotLexer.FLOAT:
                 value = new Data(t.getFloatValue());
                 break;
             // A function call. Checks that the function returns a result.
-            case AslLexer.FUNCALL:
+            case RobotLexer.FUNCALL:
                 value = executeFunction(t.getChild(0).getText(), t.getChild(1));
                 assert value != null;
                 if (value.isVoid()) {
@@ -726,15 +726,15 @@ public class Interp {
         value = evaluateExpression(t.getChild(0));
         if (t.getChildCount() == 1) {
             switch (type) {
-                case AslLexer.PLUS:
+                case RobotLexer.PLUS:
                     checkNumeric(value);
                     break;
-                case AslLexer.MINUS:
+                case RobotLexer.MINUS:
                     checkNumeric(value);
                     if (value.isFloat()) value.setValue(-value.getFloatValue());
                     else value.setValue(-value.getIntegerValue());
                     break;
-                case AslLexer.NOT:
+                case RobotLexer.NOT:
                     checkBoolean(value);
                     value.setValue(!value.getBooleanValue());
                     break;
@@ -748,12 +748,12 @@ public class Interp {
         Data value2;
         switch (type) {
             // Relational operators
-            case AslLexer.EQUAL:
-            case AslLexer.NOT_EQUAL:
-            case AslLexer.LT:
-            case AslLexer.LE:
-            case AslLexer.GT:
-            case AslLexer.GE:
+            case RobotLexer.EQUAL:
+            case RobotLexer.NOT_EQUAL:
+            case RobotLexer.LT:
+            case RobotLexer.LE:
+            case RobotLexer.GT:
+            case RobotLexer.GE:
                 value2 = evaluateExpression(t.getChild(1));
                 if (value.getType() != value2.getType()) {
                   throw new RuntimeException ("Incompatible types in relational expression");
@@ -762,27 +762,27 @@ public class Interp {
                 break;
 
             // Arithmetic operators
-            case AslLexer.PLUS:
+            case RobotLexer.PLUS:
                 value2 = evaluateExpression(t.getChild(1));
                 if (value2.isInteger() || value2.isInteger()) { checkNumeric(value); checkNumeric(value2); }
                 value.evaluateArithmetic(type, value2);
                 break;
-            case AslLexer.MINUS:
-            case AslLexer.MUL:
-            case AslLexer.DIV:
+            case RobotLexer.MINUS:
+            case RobotLexer.MUL:
+            case RobotLexer.DIV:
             		value2 = evaluateExpression(t.getChild(1));
                 checkNumeric(value); checkNumeric(value2);
                 value.evaluateArithmetic(type, value2);
                 break;
-            case AslLexer.MOD:
+            case RobotLexer.MOD:
                 value2 = evaluateExpression(t.getChild(1));
                 checkInteger(value); checkInteger(value2);
                 value.evaluateArithmetic(type, value2);
                 break;
 
             // Boolean operators
-            case AslLexer.AND:
-            case AslLexer.OR:
+            case RobotLexer.AND:
+            case RobotLexer.OR:
                 // The first operand is evaluated, but the second
                 // is deferred (lazy, short-circuit evaluation).
                 checkBoolean(value);
@@ -810,12 +810,12 @@ public class Interp {
         // Boolean evaluation with short-circuit
 
         switch (type) {
-            case AslLexer.AND:
+            case RobotLexer.AND:
                 // Short circuit if v is false
                 if (!v.getBooleanValue()) return v;
                 break;
         
-            case AslLexer.OR:
+            case RobotLexer.OR:
                 // Short circuit if v is true
                 if (v.getBooleanValue()) return v;
                 break;
@@ -883,12 +883,12 @@ public class Interp {
             AslTree p = pars.getChild(i); // Parameters of the callee
             AslTree a = args.getChild(i); // Arguments passed by the caller
             setLineNumber(a);
-            if (p.getType() == AslLexer.PVALUE) {
+            if (p.getType() == RobotLexer.PVALUE) {
                 // Pass by value: evaluate the expression
                 Params.add(i,evaluateExpression(a));
             } else {
                 // Pass by reference: check that it is a variable
-                if (a.getType() != AslLexer.ID) {
+                if (a.getType() != RobotLexer.ID) {
                     throw new RuntimeException("Wrong argument for pass by reference");
                 }
                 // Find the variable and pass the reference
@@ -918,7 +918,7 @@ public class Interp {
         for (int i = 0; i < nargs; ++i) {
             if (i > 0) trace.print(", ");
             AslTree p = params.getChild(i);
-            if (p.getType() == AslLexer.PREF) trace.print("&");
+            if (p.getType() == RobotLexer.PREF) trace.print("&");
             trace.print(p.getText() + "=" + arg_values.get(i));
         }
         trace.print(") ");
@@ -947,7 +947,7 @@ public class Interp {
         int nargs = params.getChildCount();
         for (int i = 0; i < nargs; ++i) {
             AslTree p = params.getChild(i);
-            if (p.getType() == AslLexer.PVALUE) continue;
+            if (p.getType() == RobotLexer.PVALUE) continue;
             trace.print(", &" + p.getText() + "=" + arg_values.get(i));
         }
         

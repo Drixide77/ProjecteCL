@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package Asl;
+package Robot;
 
 // Imports for ANTLR
 import org.antlr.runtime.*;
@@ -47,7 +47,7 @@ import interp.*;
  * the accepted options, run the command Asl -help.
  */
 
-public class Asl{
+public class Robot {
 
     /** The file name of the program. */
     private static String infile = null;
@@ -59,6 +59,10 @@ public class Asl{
     private static String tracefile = null;
     /** Flag to indicate whether the program must be executed after parsing. */
     private static boolean execute = true;
+    
+    private static boolean nd = false;
+    
+    private static boolean tt = false;
       
     /** Main program that invokes the parser and the interpreter. */
     
@@ -77,14 +81,14 @@ public class Asl{
         }
 
         // Creates the lexer
-        AslLexer lex = new AslLexer(input);
+        RobotLexer lex = new RobotLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lex);
 
         // Creates and runs the parser. As a result, an AST is created
-        AslParser parser = new AslParser(tokens);
+        RobotParser parser = new RobotParser(tokens);
         AslTreeAdaptor adaptor = new AslTreeAdaptor();
         parser.setTreeAdaptor(adaptor);
-        AslParser.prog_return result = null;
+        RobotParser.prog_return result = null;
         try {
             result = parser.prog();
         } catch (Exception e) {} // Just catch the exception (nothing to do)
@@ -120,7 +124,7 @@ public class Asl{
             int linenumber = -1;
             try {
                 I = new Interp(t, tracefile); // prepares the interpreter
-                I.Run();                  // Executes the code
+                I.Run(nd,tt);                  // Executes the code
             } catch (RuntimeException e) {
                 if (I != null) linenumber = I.lineNumber();
                 System.err.print ("Runtime error");
@@ -159,17 +163,20 @@ public class Asl{
                         .hasArg()
                         .withDescription ("write a trace of function calls during the execution of the program")
                         .create ("trace");
-                                       
+        Option nodisplay = new Option("nodisplay", "do not run the graphical display");
+        Option txttrace = new Option("txttrace", "write a trace of the robot actions trough the standart channel");                                
         Options options = new Options();
         options.addOption(help);
         options.addOption(dot);
         options.addOption(ast);
         options.addOption(trace);
         options.addOption(noexec);
+        options.addOption(nodisplay);
+        options.addOption(txttrace);
         CommandLineParser clp = new GnuParser();
         CommandLine line = null;
 
-        String cmdline = "Asl [options] file";
+        String cmdline = "Robot [options] file";
         
         
         // Parse the options
@@ -201,6 +208,12 @@ public class Asl{
         
         // Option -noexec
         if (line.hasOption ("noexec")) execute = false;
+        
+        // Option -nodisplay
+        if (line.hasOption ("nodisplay")) nd = true;
+        
+        // Option -txttrace
+        if (line.hasOption ("txttrace")) tt = true;
 
         // Remaining arguments (the input file)
         String[] files = line.getArgs();

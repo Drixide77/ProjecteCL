@@ -159,19 +159,19 @@ public class Data {
           assert type == d.type;
           if (type == Type.FLOAT) {
           	switch (op) {
-          		case AslLexer.PLUS: fvalue += d.fvalue; break;
-		        	case AslLexer.MINUS: fvalue -= d.fvalue; break;
-		        	case AslLexer.MUL: fvalue *= d.fvalue; break;
-		        	case AslLexer.DIV: checkDivZero(d); fvalue /= d.fvalue; break;
+          		case RobotLexer.PLUS: fvalue += d.fvalue; break;
+		        	case RobotLexer.MINUS: fvalue -= d.fvalue; break;
+		        	case RobotLexer.MUL: fvalue *= d.fvalue; break;
+		        	case RobotLexer.DIV: checkDivZero(d); fvalue /= d.fvalue; break;
 		        	default: assert false;
 		        }
           } else if (type == Type.INTEGER) {
 		        switch (op) {
-		            case AslLexer.PLUS: value += d.value; break;
-		            case AslLexer.MINUS: value -= d.value; break;
-		            case AslLexer.MUL: value *= d.value; break;
-		            case AslLexer.DIV: checkDivZero(d); value /= d.value; break;
-		            case AslLexer.MOD: checkDivZero(d); value %= d.value; break;
+		            case RobotLexer.PLUS: value += d.value; break;
+		            case RobotLexer.MINUS: value -= d.value; break;
+		            case RobotLexer.MUL: value *= d.value; break;
+		            case RobotLexer.DIV: checkDivZero(d); value /= d.value; break;
+		            case RobotLexer.MOD: checkDivZero(d); value %= d.value; break;
 		            default: assert false;
 		        }
           } else assert false;
@@ -188,28 +188,28 @@ public class Data {
         assert type != Type.VOID && type == d.type;
         if (type == Type.STRING) {
         	switch (op) {
-		          case AslLexer.EQUAL: return new Data(svalue.equals(d.svalue));
-		          case AslLexer.NOT_EQUAL: return new Data(!svalue.equals(d.svalue));
+		          case RobotLexer.EQUAL: return new Data(svalue.equals(d.svalue));
+		          case RobotLexer.NOT_EQUAL: return new Data(!svalue.equals(d.svalue));
 		          default: assert false; 
 		      }
         } else if (type == Type.FLOAT) {
         	switch (op) {
-		          case AslLexer.EQUAL: return new Data(fvalue == d.fvalue);
-		          case AslLexer.NOT_EQUAL: return new Data(fvalue != d.fvalue);
-		          case AslLexer.LT: return new Data(fvalue < d.fvalue);
-		          case AslLexer.LE: return new Data(fvalue <= d.fvalue);
-		          case AslLexer.GT: return new Data(fvalue > d.fvalue);
-		          case AslLexer.GE: return new Data(fvalue >= d.fvalue);
+		          case RobotLexer.EQUAL: return new Data(fvalue == d.fvalue);
+		          case RobotLexer.NOT_EQUAL: return new Data(fvalue != d.fvalue);
+		          case RobotLexer.LT: return new Data(fvalue < d.fvalue);
+		          case RobotLexer.LE: return new Data(fvalue <= d.fvalue);
+		          case RobotLexer.GT: return new Data(fvalue > d.fvalue);
+		          case RobotLexer.GE: return new Data(fvalue >= d.fvalue);
 		          default: assert false; 
 		      }
         } else {
 		      switch (op) {
-		          case AslLexer.EQUAL: return new Data(value == d.value);
-		          case AslLexer.NOT_EQUAL: return new Data(value != d.value);
-		          case AslLexer.LT: return new Data(value < d.value);
-		          case AslLexer.LE: return new Data(value <= d.value);
-		          case AslLexer.GT: return new Data(value > d.value);
-		          case AslLexer.GE: return new Data(value >= d.value);
+		          case RobotLexer.EQUAL: return new Data(value == d.value);
+		          case RobotLexer.NOT_EQUAL: return new Data(value != d.value);
+		          case RobotLexer.LT: return new Data(value < d.value);
+		          case RobotLexer.LE: return new Data(value <= d.value);
+		          case RobotLexer.GT: return new Data(value > d.value);
+		          case RobotLexer.GE: return new Data(value >= d.value);
 		          default: assert false; 
 		      }
 		    }
