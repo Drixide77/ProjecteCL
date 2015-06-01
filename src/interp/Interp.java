@@ -34,6 +34,8 @@ import java.util.HashMap;
 import java.util.Scanner;
 import java.io.*;
 import java.lang.Math;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 /** Class that implements the interpreter of the language. */
 
@@ -88,6 +90,7 @@ public class Interp {
 		  
 		}
 		
+		
 		private ArrayList<Obstacle> obsList = new ArrayList<Obstacle>();
 		
 		//Constants
@@ -100,6 +103,11 @@ public class Interp {
 		private static final float SPEED = 0.00001f;
 		
 		private static final float SENSOR_R = 0.51f;
+		
+		//Graphic Display
+		private JFrame frame;
+		
+		private Display display;
 
     
     /**
@@ -126,7 +134,13 @@ public class Interp {
 
     /** Runs the program by calling the main function without parameters. */
     public void Run() {
-        executeFunction ("main", null);
+    		frame = new JFrame("Simulation");
+				display = new Display();
+				frame.add(display);
+				frame.setSize(300, 400);
+				frame.setVisible(true);
+				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        executeFunction ("main", null); 
     }
 
     /** Returns the contents of the stack trace */
@@ -293,6 +307,7 @@ public class Interp {
         } 
         else if (funcname.equals("rMove")) 
         {
+        		if (!positioned) throw new RuntimeException("robot is not positioned yet");
         		if (args.getChildCount() != 1) throw new RuntimeException("incorrect number of arguments");
 		      	AslTree n;
 		      	Data value;
@@ -312,6 +327,7 @@ public class Interp {
         }
         else if (funcname.equals("rTurn")) 
         {
+        		if (!positioned) throw new RuntimeException("robot is not positioned yet");
         		if (args.getChildCount() != 1) throw new RuntimeException("incorrect number of arguments");
 		      	AslTree n;
 		      	Data value;
@@ -400,6 +416,7 @@ public class Interp {
         }
         else if (funcname.equals("rFeel"))
         {
+        		if (!positioned) throw new RuntimeException("robot is not positioned yet");
         		if (args.getChildCount() != 1) throw new RuntimeException("incorrect number of arguments");
 		      	AslTree n;
 		      	Data value;
@@ -438,18 +455,21 @@ public class Interp {
 		      	return result;
         }
         else if (funcname.equals("rXPosition")) {
+        		if (!positioned) throw new RuntimeException("robot is not positioned yet");
         		if (args.getChildCount() != 0) throw new RuntimeException("incorrect number of arguments");
         		
         		Data result = new Data(rX);
 		      	return result;
         }
         else if (funcname.equals("rYPosition")) {
+        		if (!positioned) throw new RuntimeException("robot is not positioned yet");
         		if (args.getChildCount() != 0) throw new RuntimeException("incorrect number of arguments");
         		
         		Data result = new Data(rY);
 		      	return result;
         }
         else if (funcname.equals("rRotation")) {
+        		if (!positioned) throw new RuntimeException("robot is not positioned yet");
         		if (args.getChildCount() != 0) throw new RuntimeException("incorrect number of arguments");
         		
         		Data result = new Data(rRot);

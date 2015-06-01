@@ -45,6 +45,7 @@ PARSER_SRC =	$(PARSER)/$(TARGET)Lexer.java \
 INTERP_SRC =	$(INTERP)/Interp.java \
 				$(INTERP)/Stack.java \
 				$(INTERP)/Data.java \
+				$(INTERP)/Display.java \
 				$(INTERP)/$(TARGET)Tree.java \
 				$(INTERP)/AslTreeAdaptor.java
 
